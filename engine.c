@@ -76,12 +76,13 @@ int engine_add(engine *e, const char *name)
     r->cpu = rand() %60;
     r->ram = rand() %80;
     r->alive = 1;
-
-    insert_index(name, e, r->pid);
-   
-
-    e->count++;
+        e->count++;
     e->dirty = 1;
+
+    if(insert_index(name, e, r->pid)!= 0)
+        return -1;
+    wal_append(&e->wal, &e->wal_size, &e->wal_capacity, wal_committed, r->pid); // 
+    
     return 0;
 }
 /* Find process in RAM using index */
@@ -95,12 +96,18 @@ Processrecord *engine_find(engine *e, const char *name)
 /* Logical delete process and update WAL */
 int engine_delete(engine *e, const char *name)
 {
+    if(!name || !e) return -1;
+    
+    wal_append(&e->wal, &e->wal_size, &e->wal_capacity, wal_delete, idx);
+    
     uint64_t idx;
     if (find_index(name, e, &idx) != 0) return -1;
 
     e->process[idx].alive = 0;
-    remove_index(name, e,&idx);
-    wal_append(&e->wal, &e->wal_size, &e->wal_capacity, wal_delete, idx);
+    if(remove_index(name, e,&idx)!= 0) return -1;
+
+    wal_append(&e->wal,&e->wal_size,&e->wal_capacity,wal_committed,idx)
+    
     e->dirty = 1;
     return 0;
 }
@@ -138,7 +145,7 @@ int engine_save(engine *e)
         if(fwrite(&e->process[i], sizeof(Processrecord), 1, e->fb) != 1)
             return -1;
     }
-    fflush(e->fb);
+    if(fflush(e->fb)!= 0) return -1;
 
     e->hdr.record_count = e->count;
     commit_file(e->fb, &e->hdr);
@@ -146,4 +153,5 @@ int engine_save(engine *e)
     return 0;
 
 }
+
 

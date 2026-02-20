@@ -66,6 +66,9 @@ void engine_destroy(engine *e)
 int engine_add(engine *e, const char *name)
 {
     if (e->capacity == e->count) return -1;
+    
+    wal_append(&e->wal, &e->wal_size, &e->wal_capacity, wal_add, r->pid);
+    
     Processrecord *r = &e->process[e->count];
     r->pid = e->count;
     strncpy(r->name, name, sizeof(r->name));
@@ -75,7 +78,7 @@ int engine_add(engine *e, const char *name)
     r->alive = 1;
 
     insert_index(name, e, r->pid);
-    wal_append(&e->wal, &e->wal_size, &e->wal_capacity, wal_add, r->pid);
+   
 
     e->count++;
     e->dirty = 1;
@@ -143,3 +146,4 @@ int engine_save(engine *e)
     return 0;
 
 }
+

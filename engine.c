@@ -26,9 +26,10 @@ engine *engine_create(size_t init_capacity)
         goto fail;
 
     return e;
-    fail:
+    fail:{
         engine_destroy(e);
-    return NULL;
+        return NULL;
+    }
 }
 /* Load file and rebuild index */
 int engine_load(engine *e, const char *path)
@@ -140,4 +141,5 @@ int engine_save(engine *e)
     commit_file(e->fb, &e->hdr);
     e->dirty = 0;
     return 0;
+
 }

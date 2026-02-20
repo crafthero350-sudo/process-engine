@@ -16,7 +16,8 @@
 enum waltype {
     wal_add,     // Record was added
     wal_delete,  // Record was deleted
-    wal_update,  // Record was updated
+    wal_update,
+    wal_committed// Record was updated
 };
 
 // Single WAL entry
@@ -42,3 +43,4 @@ void wal_clear(walenter **wal,size_t *size);
 void wal_free(walenter **wal);
 
 #endif // IN_MEMORY_PROCESS_ENGINE_V2_WAL_H
+
